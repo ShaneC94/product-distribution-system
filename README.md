@@ -85,3 +85,117 @@ Implementing a service-oriented architecture (SOA) with distinct services (Wareh
 | **Sanzir Anarbaev** | Faults, Returns, and Complaints | Maintenance of the system during and post delivery, ensuring accurate representation and accuracy. |
 
 ---
+
+# Database Setup (MySQL)
+
+### 1. Create MySQL Connection in Workbench
+
+| Field | Value |
+|-------|--------|
+| Hostname | 127.0.0.1 |
+| Port | 3306 |
+| Username | root |
+| Password | your password |
+
+### 2. Create schemas
+
+Example:
+
+```sql
+CREATE DATABASE locationdb;
+CREATE DATABASE warehousedb;
+CREATE DATABASE orderdb;
+CREATE DATABASE logisticsdb;
+CREATE DATABASE faultsdb;
+```
+
+Spring Boot will auto-create tables.
+
+---
+
+# Environment Variables (`.env`)
+
+Create a `.env` file in the **project root**.
+
+```
+# Google Maps API Key
+GOOGLE_MAPS_API_KEY=PUT_YOUR_API_KEY_HERE
+
+# DB Example
+DB_URL=jdbc:mysql://localhost:3306/locationdb
+DB_USERNAME=root
+DB_PASSWORD=PUT_YOUR_PASSWORD_HERE
+
+# Microservice Ports
+LOCATION_SERVICE_PORT=8080
+WAREHOUSE_SERVICE_PORT=8081
+ORDER_SERVICE_PORT=8082
+LOGISTICS_SERVICE_PORT=8083
+FAULTS_SERVICE_PORT=8084
+```
+
+Each microservice **must run on a unique port**.
+
+---
+
+# Example application.properties (Location Service)
+
+```
+spring.application.name=location-service
+
+spring.datasource.url=${DB_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.defer-datasource-initialization=true
+
+spring.sql.init.mode=always
+
+spring.cache.type=simple
+spring.cache.cache-names=geocodeCache,distanceCache
+
+google.maps.api.key=${GOOGLE_MAPS_API_KEY}
+
+server.port=${LOCATION_SERVICE_PORT}
+```
+
+---
+
+# Running Each Microservice
+
+Navigate into each service directory and run:
+
+```
+cd location-service
+./gradlew bootRun
+```
+
+```
+cd warehouse-service
+./gradlew bootRun
+```
+
+```
+cd order-processing-service
+./gradlew bootRun
+```
+
+```
+cd logistics-service
+./gradlew bootRun
+```
+
+```
+cd faults-returns-service
+./gradlew bootRun
+```
+
+---
+
+
+
+
+
