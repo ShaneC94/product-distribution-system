@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Warehouse Finder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+    <h2>Warehouse Finder</h2>
+
+    <label for="addressInput">Enter address:</label>
+    <input type="text" id="addressInput" placeholder="Example: 2000 Simcoe St N, Oshawa">
+
+    <button onclick="getNearest()">Find Nearest Warehouse</button>
+    <button onclick="getRanked()">Get Ranked Warehouses</button>
+
+    <pre id="output">Results will appear here...</pre>
+</div>
+
+<script>
+    const BASE_URL = "http://localhost:8080";
+
+    function getNearest() {
+        const address = document.getElementById("addressInput").value;
+        if (!address.trim()) return alert("Please enter an address.");
+
+        fetch(`${BASE_URL}/api/warehouses/nearest?address=${encodeURIComponent(address)}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(err => console.error(err));
+    }
+
+    function getRanked() {
+        const address = document.getElementById("addressInput").value;
+        if (!address.trim()) return alert("Please enter an address.");
+
+        fetch(`${BASE_URL}/api/warehouses/ranked?address=${address}&top=5`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+            })
+            .catch(err => console.error(err));
+    }
+</script>
+</body>
+</html>
