@@ -1,39 +1,66 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+##############################
+# Maven
+##############################
+target/
+*/target/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+
+##############################
+# Environment / secrets
+##############################
+.env
 *.env
 **/*.env
+.env.*
+*.key
+*.pem
 
-### STS ###
-.apt_generated
+##############################
+# Logs & temp
+##############################
+*.log
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+Thumbs.db
+
+##############################
+# IntelliJ IDEA
+##############################
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+*/out/
+
+##############################
+# Eclipse / Spring Tools
+##############################
 .classpath
-.factorypath
 .project
-.settings
+.settings/
+.apt_generated/
 .springBeans
 .sts4-cache
 bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+*/bin/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+##############################
+# VS Code
+##############################
 .vscode/
+
+##############################
+# OS files
+##############################
+.DS_Store
+
+##############################
+# Node / Frontend (if you add UI later)
+##############################
+frontend/node_modules/
+frontend/dist/
+frontend/build/
