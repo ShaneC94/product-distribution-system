@@ -86,6 +86,27 @@ Implementing a service-oriented architecture (SOA) with distinct services (Wareh
 
 ---
 
+# Folder Structure
+
+```
+ProductDistributedSystem/
+│
+├── frontend/
+│   ├── location-ui/
+│   ├── warehouse-ui/
+│   ├── order-ui/
+│   ├── logistics-ui/
+│   └── faults-returns-ui/
+│
+├── location-service/
+├── warehouse-service/
+├── order-processing-service/
+├── logistics-service/
+└── faults-returns-service/
+```
+
+---
+
 # Database Setup (MySQL)
 
 ### 1. Create MySQL Connection in Workbench
@@ -101,7 +122,7 @@ Implementing a service-oriented architecture (SOA) with distinct services (Wareh
 
 Example:
 
-```sql
+```
 CREATE DATABASE locationdb;
 CREATE DATABASE warehousedb;
 CREATE DATABASE orderdb;
@@ -170,27 +191,49 @@ Navigate into each service directory and run:
 
 ```
 cd location-service
-./gradlew bootRun
+mvn spring-boot:run
 ```
 
 ```
 cd warehouse-service
-./gradlew bootRun
+mvn spring-boot:run
 ```
 
 ```
 cd order-processing-service
-./gradlew bootRun
+mvn spring-boot:run
 ```
 
 ```
 cd logistics-service
-./gradlew bootRun
+mvn spring-boot:run
 ```
 
 ```
 cd faults-returns-service
-./gradlew bootRun
+mvn spring-boot:run
+```
+
+---
+
+# Running the Frontend (Python Simple Server)
+
+1. Navigate to the frontend folder
+
+```
+cd frontend
+```
+
+2. Start the server
+
+```
+python -m http.server 5500
+```
+
+3. Open in browser
+
+```
+http://localhost:5500
 ```
 
 ---
