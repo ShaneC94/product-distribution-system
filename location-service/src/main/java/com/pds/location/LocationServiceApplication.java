@@ -5,9 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableCaching
+@EnableAsync
 @EnableJpaRepositories(basePackages = "com.pds.location.repository")
 @EntityScan(basePackages = "com.pds.location.model")
 public class LocationServiceApplication {

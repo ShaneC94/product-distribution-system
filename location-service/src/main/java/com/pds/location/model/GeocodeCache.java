@@ -34,7 +34,7 @@ public class GeocodeCache {
         this.longitude = longitude;
         this.createdAt = LocalDateTime.now();
         this.lastAccessed = LocalDateTime.now();
-    }
+  }
 
     @PrePersist
     protected void onCreate() {
@@ -47,6 +47,7 @@ public class GeocodeCache {
         this.lastAccessed = LocalDateTime.now();
     }
 
+    public Long getId() { return id; }
     public String getNormalizedAddress() { return normalizedAddress; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
