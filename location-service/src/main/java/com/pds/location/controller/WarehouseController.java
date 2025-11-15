@@ -1,19 +1,18 @@
 package com.pds.location.controller;
 
 import com.pds.location.model.Warehouse;
+import com.pds.location.model.WarehouseDistance;
+import com.pds.location.model.WarehouseZoneInfo;
 import com.pds.location.repository.WarehouseRepository;
 import com.pds.location.service.GoogleMapsService;
+import com.pds.location.service.LocationService;
+
 import org.json.JSONException;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-/**
- * Handles warehouse operations and integrates Google Maps for distance ranking.
- */
 @RestController
 @RequestMapping("/api/warehouses")
 @CrossOrigin(origins = "*")
@@ -21,18 +20,29 @@ public class WarehouseController {
 
     private final WarehouseRepository warehouseRepository;
     private final GoogleMapsService googleMapsService;
+    private final LocationService locationService;
 
-    @Autowired
-    public WarehouseController(WarehouseRepository warehouseRepository, GoogleMapsService googleMapsService) {
+    public WarehouseController(
+            WarehouseRepository warehouseRepository,
+            GoogleMapsService googleMapsService,
+            LocationService locationService
+    ) {
         this.warehouseRepository = warehouseRepository;
         this.googleMapsService = googleMapsService;
+        this.locationService = locationService;
     }
 
+    // -------------------------------------------------------------
+    // CRUD: Fetch all warehouses
+    // -------------------------------------------------------------
     @GetMapping
     public List<Warehouse> getAllWarehouses() {
         return warehouseRepository.findAll();
     }
 
+    // -------------------------------------------------------------
+    // CRUD: Add warehouse, automatically geocode if needed
+    // -------------------------------------------------------------
     @PostMapping
     public Warehouse addWarehouse(@RequestBody Warehouse warehouse) throws JSONException {
         if (warehouse.getLatitude() == 0 || warehouse.getLongitude() == 0) {
@@ -43,6 +53,9 @@ public class WarehouseController {
         return warehouseRepository.save(warehouse);
     }
 
+    // -------------------------------------------------------------
+    // CRUD: Delete warehouse
+    // -------------------------------------------------------------
     @DeleteMapping("/{id}")
     public String deleteWarehouse(@PathVariable Long id) {
         if (warehouseRepository.existsById(id)) {
@@ -52,89 +65,66 @@ public class WarehouseController {
         return "Warehouse not found.";
     }
 
+    // -------------------------------------------------------------
+    // Nearest warehouse (fast haversine fallback)
+    // -------------------------------------------------------------
     @GetMapping("/nearest")
     public Warehouse getNearestWarehouse(@RequestParam String address) throws JSONException {
-        double[] coords = googleMapsService.geocodeAddress(address);
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-        if (warehouses.isEmpty()) throw new RuntimeException("No warehouses available.");
+        double[] customerCoords = googleMapsService.geocodeAddress(address);
 
-        Warehouse nearest = null;
-        double minDistance = Double.MAX_VALUE;
-
-        for (Warehouse w : warehouses) {
-            double distance = haversine(coords[0], coords[1], w.getLatitude(), w.getLongitude());
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearest = w;
-            }
-        }
-
-        return nearest;
+        return warehouseRepository.findAll().stream()
+                .min(Comparator.comparingDouble(w ->
+                        haversine(customerCoords[0], customerCoords[1],
+                                w.getLatitude(), w.getLongitude())))
+                .orElseThrow(() -> new RuntimeException("No warehouses found"));
     }
 
-    @GetMapping("/ranked")
-    public ResponseEntity<Map<String, Object>> getRankedWarehouses(
-            @RequestParam String address,
-            @RequestParam(required = false) Integer top) throws JSONException {
+    // -------------------------------------------------------------
+    // ASYNC RANKED WAREHOUSES (Google Routes + fallback)
+    // -------------------------------------------------------------
+    @GetMapping("/ranked/async")
+    public ResponseEntity<Map<String, Object>> getRankedWarehousesAsync(
+            @RequestParam String address
+    ) {
 
-        double[] customerCoords = googleMapsService.geocodeAddress(address);
-        List<Warehouse> warehouses = warehouseRepository.findAll();
-        if (warehouses.isEmpty()) throw new RuntimeException("No warehouses available.");
+        // sync wrapper around the async method
+        List<WarehouseDistance> ranked = locationService.rankWarehouses(address);
 
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        for (Warehouse w : warehouses) {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("id", w.getId());
-            entry.put("name", w.getName());
-            entry.put("address", w.getAddress());
-
-            try {
-                JSONObject route = googleMapsService.computeRoute(
-                        customerCoords[0], customerCoords[1],
-                        w.getLatitude(), w.getLongitude());
-
-                if (route != null && route.has("distance_km")) {
-                    entry.put("distance_km", Math.round(route.getDouble("distance_km") * 100.0) / 100.0);
-                    entry.put("duration_text", route.optString("duration_text", "N/A"));
-                } else {
-                    // Fallback to Haversine
-                    double fallback = haversine(customerCoords[0], customerCoords[1], w.getLatitude(), w.getLongitude());
-                    entry.put("distance_km", Math.round(fallback * 100.0) / 100.0);
-                    entry.put("duration_text", "approx");
-                }
-            } catch (Exception e) {
-                // Fallback to Haversine on error
-                double fallback = haversine(customerCoords[0], customerCoords[1], w.getLatitude(), w.getLongitude());
-                entry.put("distance_km", Math.round(fallback * 100.0) / 100.0);
-                entry.put("duration_text", "approx");
-            }
-
-            results.add(entry);
-        }
-
-        // Sort ascending by distance
-        results.sort(Comparator.comparingDouble(e -> (double) e.get("distance_km")));
-
-        if (top != null && top > 0 && top < results.size()) {
-            results = results.subList(0, top);
-        }
-
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("customer_address", address);
-        response.put("results_count", results.size());
-        response.put("ranked_warehouses", results);
+        response.put("results_count", ranked.size());
+        response.put("ranked_warehouses", ranked);
 
         return ResponseEntity.ok(response);
     }
 
+    // -------------------------------------------------------------
+    // CLASSIFY WAREHOUSES INTO ZONES A/B/C
+    // -------------------------------------------------------------
+    @GetMapping("/zones")
+    public ResponseEntity<Map<String, Object>> getZones(@RequestParam String address) {
+        List<WarehouseZoneInfo> zoneList = locationService.classifyWarehousesByZone(address);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("customer_address", address);
+        response.put("results_count", zoneList.size());
+        response.put("warehouses", zoneList);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // -------------------------------------------------------------
+    // Helper method: Haversine distance
+    // -------------------------------------------------------------
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
         final int R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
+
         double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 }

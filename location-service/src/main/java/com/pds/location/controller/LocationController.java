@@ -19,16 +19,25 @@ public class LocationController {
     @Autowired
     private CacheManager cacheManager;
 
+    // -------------------------------------------------------------
+    // NEAREST WAREHOUSE (using raw latitude/longitude input)
+    // -------------------------------------------------------------
     @GetMapping("/nearest")
     public Warehouse getNearestWarehouse(@RequestParam double lat, @RequestParam double lon) {
         return locationService.findNearestWarehouse(lat, lon);
     }
 
+    // -------------------------------------------------------------
+    // NEAREST WAREHOUSE (geocoding the address first)
+    // -------------------------------------------------------------
     @GetMapping("/nearestByAddress")
     public Warehouse getNearestWarehouseByAddress(@RequestParam String address) throws JSONException {
         return locationService.findNearestWarehouseByAddress(address);
     }
 
+    // -------------------------------------------------------------
+    // DEBUG: View warehouses and all cached entries
+    // -------------------------------------------------------------
     @GetMapping("/debug")
     public Map<String, Object> debugInfo() {
         Map<String, Object> result = new HashMap<>();
@@ -38,6 +47,9 @@ public class LocationController {
         return result;
     }
 
+    // -------------------------------------------------------------
+    // CLEAR ALL CACHES (geocode + distance)
+    // -------------------------------------------------------------
     @GetMapping("/clearCache")
     public String clearCaches() {
         cacheManager.getCacheNames().forEach(name -> {
@@ -46,6 +58,9 @@ public class LocationController {
         return "All caches cleared.";
     }
 
+    // -------------------------------------------------------------
+    // Helper: Extract entries from a named cache
+    // -------------------------------------------------------------
     private Map<Object, Object> extractCacheEntries(String cacheName) {
         Cache cache = cacheManager.getCache(cacheName);
         if (cache == null) return Map.of("status", "not found");
@@ -54,7 +69,7 @@ public class LocationController {
         try {
             Object nativeCache = cache.getNativeCache();
             if (nativeCache instanceof Map<?, ?> map) {
-                map.forEach((k, v) -> entries.put(k, v));
+                entries.putAll(map);
             } else {
                 entries.put("info", "Cache type not iterable: " + nativeCache.getClass().getSimpleName());
             }

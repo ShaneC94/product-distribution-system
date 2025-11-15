@@ -2,18 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Warehouse Finder</title>
+    <title>Location Service</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="container">
-    <h2>Warehouse Finder</h2>
+    <h2>Location Service</h2>
 
     <label for="addressInput">Enter address:</label>
     <input type="text" id="addressInput" placeholder="Example: 2000 Simcoe St N, Oshawa">
 
-    <button onclick="getNearest()">Find Nearest Warehouse</button>
-    <button onclick="getRanked()">Get Ranked Warehouses</button>
+    <label for="latInput">Latitude:</label>
+    <input type="text" id="latInput" placeholder="e.g. 43.9451">
+
+    <label for="lonInput">Longitude:</label>
+    <input type="text" id="lonInput" placeholder="e.g. -78.8965">
+
+    <div class="buttons">
+        <button onclick="getNearest()">Find Nearest Warehouse</button>
+        <button onclick="getRanked()">Rank Warehouses (Async)</button>
+        <button onclick="getZones()">Classify by Zones</button>
+        <button onclick="reverseGeocode()">Reverse Geocode (Lat/Lon -> Address)</button>
+    </div>
 
     <pre id="output">Results will appear here...</pre>
 </div>
@@ -22,27 +32,56 @@
     const BASE_URL = "http://localhost:8080";
 
     function getNearest() {
-        const address = document.getElementById("addressInput").value;
-        if (!address.trim()) return alert("Please enter an address.");
+        const address = document.getElementById("addressInput").value.trim();
+        if (!address) return alert("Please enter an address.");
 
         fetch(`${BASE_URL}/api/warehouses/nearest?address=${encodeURIComponent(address)}`)
             .then(res => res.json())
-            .then(data => {
-                document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-            })
-            .catch(err => console.error(err));
+            .then(data => showOutput(data))
+            .catch(err => showError(err));
     }
 
     function getRanked() {
-        const address = document.getElementById("addressInput").value;
-        if (!address.trim()) return alert("Please enter an address.");
+        const address = document.getElementById("addressInput").value.trim();
+        if (!address) return alert("Please enter an address.");
 
-        fetch(`${BASE_URL}/api/warehouses/ranked?address=${address}&top=5`)
+        fetch(`${BASE_URL}/api/warehouses/ranked/async?address=${encodeURIComponent(address)}`)
             .then(res => res.json())
-            .then(data => {
-                document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-            })
-            .catch(err => console.error(err));
+            .then(data => showOutput(data))
+            .catch(err => showError(err));
+    }
+
+    function getZones() {
+        const address = document.getElementById("addressInput").value.trim();
+        if (!address) return alert("Please enter an address.");
+
+        fetch(`${BASE_URL}/api/warehouses/zones?address=${encodeURIComponent(address)}`)
+            .then(res => res.json())
+            .then(data => showOutput(data))
+            .catch(err => showError(err));
+    }
+
+    function reverseGeocode() {
+        const lat = document.getElementById("latInput").value.trim();
+        const lon = document.getElementById("lonInput").value.trim();
+
+        if (!lat || !lon) return alert("Please enter both latitude and longitude.");
+
+        fetch(`${BASE_URL}/location/reverse?lat=${lat}&lon=${lon}`)
+            .then(res => res.json())
+            .then(data => showOutput(data))
+            .catch(err => showError(err));
+    }
+
+    function showOutput(data) {
+        document.getElementById("output").textContent =
+            JSON.stringify(data, null, 2);
+    }
+
+    function showError(err) {
+        document.getElementById("output").textContent =
+            "Error:\n" + err;
+        console.error(err);
     }
 </script>
 </body>

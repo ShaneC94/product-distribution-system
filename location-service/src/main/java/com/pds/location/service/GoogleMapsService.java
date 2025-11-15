@@ -8,9 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Provides geocoding and routing functionality via Google Maps APIs.
@@ -25,6 +28,9 @@ public class GoogleMapsService {
     private final RestTemplate restTemplate;
     private final String apiKey;
 
+    // -------------------------------------------------------------
+    // Constructor injection
+    // -------------------------------------------------------------
     @Autowired
     public GoogleMapsService(
             GeocodeCacheRepository geocodeCacheRepository,
@@ -37,10 +43,22 @@ public class GoogleMapsService {
         this.restTemplate.setUriTemplateHandler(new DefaultUriBuilderFactory());
     }
 
-    /**
-     * Geocode an address into latitude/longitude using Google Maps Geocoding API.
-     * Uses MySQL cache before calling external APIs.
-     */
+    // -------------------------------------------------------------
+    // ASYNC DISTANCE COMPUTATION
+    // -------------------------------------------------------------
+    @Async
+    public CompletableFuture<JSONObject> computeRouteAsync(
+            double fromLat, double fromLon,
+            double toLat, double toLon
+    ) {
+        JSONObject route = computeRoute(fromLat, fromLon, toLat, toLon);
+        return CompletableFuture.completedFuture(route);
+    }
+
+
+    // -------------------------------------------------------------
+    // GEOCODING (Address -> Coordinates)
+    // -------------------------------------------------------------
     @Cacheable("geocodeCache")
     public double[] geocodeAddress(String address) {
         final String normalizedAddress = normalizeAddress(address);
@@ -64,9 +82,40 @@ public class GoogleMapsService {
                 });
     }
 
-    /**
-     * Normalize and append country if missing.
-     */
+    // -------------------------------------------------------------
+    // REVERSE GEOCODING (Coordinates -> Address)
+    // -------------------------------------------------------------
+    public String reverseGeocode(double lat, double lon) {
+        try {
+            String url = String.format(
+                    "https://maps.googleapis.com/maps/api/geocode/json?latlng=%f,%f&key=%s",
+                    lat, lon, apiKey
+            );
+
+            String response = restTemplate.getForObject(url, String.class);
+            if (response == null) return "Unknown location";
+
+            JSONObject json = new JSONObject(response);
+
+            if (!"OK".equals(json.optString("status"))) {
+                System.err.println("Reverse geocoding failed: " + json.optString("status"));
+                return "Unknown location";
+            }
+
+            return json
+                    .getJSONArray("results")
+                    .getJSONObject(0)
+                    .getString("formatted_address");
+
+        } catch (Exception e) {
+            System.err.println("Reverse geocode error: " + e.getMessage());
+            return "Unknown location";
+        }
+    }
+
+    // -------------------------------------------------------------
+    // ADDRESS NORMALIZATION
+    // -------------------------------------------------------------
     private String normalizeAddress(String address) {
         String normalized = address.trim();
         if (!normalized.toLowerCase().contains("canada")) {
@@ -75,9 +124,9 @@ public class GoogleMapsService {
         return normalized;
     }
 
-    /**
-     * Makes one geocoding request to the Google Maps Geocoding API.
-     */
+    // -------------------------------------------------------------
+    // GEOCODING API REQUEST
+    // -------------------------------------------------------------
     private double[] fetchCoordinates(String address) {
         try {
             String url = String.format(
@@ -108,11 +157,9 @@ public class GoogleMapsService {
         }
     }
 
-    /**
-     * Compute driving distance and duration between two coordinates using Google Routes API v2.
-     * Uses only the new format ("duration": "123s").
-     * Returns distance (km) and duration (seconds).
-     */
+    // -------------------------------------------------------------
+    // ROUTE MATRIX API (Driving Distance/Duration)
+    // -------------------------------------------------------------
     @Cacheable("distanceCache")
     public JSONObject computeRoute(double fromLat, double fromLon, double toLat, double toLon) {
         try {
@@ -158,7 +205,7 @@ public class GoogleMapsService {
 
             double distanceMeters = route.optDouble("distanceMeters", 0);
 
-            // Parse new format duration string, e.g. "123s"
+            // Parse new format duration string
             String durationStr = route.optString("duration", "0s").replace("s", "");
             long durationSeconds = 0;
             try {

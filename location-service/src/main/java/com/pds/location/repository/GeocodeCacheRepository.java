@@ -14,9 +14,6 @@ public interface GeocodeCacheRepository extends JpaRepository<GeocodeCache, Long
 
     Optional<GeocodeCache> findByNormalizedAddress(String normalizedAddress);
 
-    /**
-     * Updates the last_accessed timestamp when a cached address is reused.
-     */
     @Transactional
     @Modifying
     @Query("UPDATE GeocodeCache g SET g.lastAccessed = CURRENT_TIMESTAMP WHERE g.normalizedAddress = :address")
