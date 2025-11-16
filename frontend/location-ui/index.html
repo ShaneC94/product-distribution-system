@@ -22,7 +22,6 @@
         <button onclick="getNearest()">Find Nearest Warehouse</button>
         <button onclick="getRanked()">Rank Warehouses (Async)</button>
         <button onclick="getZones()">Classify by Zones</button>
-        <button onclick="reverseGeocode()">Reverse Geocode (Lat/Lon -> Address)</button>
     </div>
 
     <pre id="output">Results will appear here...</pre>
@@ -56,18 +55,6 @@
         if (!address) return alert("Please enter an address.");
 
         fetch(`${BASE_URL}/api/warehouses/zones?address=${encodeURIComponent(address)}`)
-            .then(res => res.json())
-            .then(data => showOutput(data))
-            .catch(err => showError(err));
-    }
-
-    function reverseGeocode() {
-        const lat = document.getElementById("latInput").value.trim();
-        const lon = document.getElementById("lonInput").value.trim();
-
-        if (!lat || !lon) return alert("Please enter both latitude and longitude.");
-
-        fetch(`${BASE_URL}/location/reverse?lat=${lat}&lon=${lon}`)
             .then(res => res.json())
             .then(data => showOutput(data))
             .catch(err => showError(err));
