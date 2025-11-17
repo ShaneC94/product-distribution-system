@@ -25,7 +25,7 @@ The project aims to tackle the main problem of having multiple different systems
 ---
 
 # Solution
-Implementing a service-oriented architecture (SOA) with distinct services (Warehouse, Order, Logistics), utilizing principles like data partitioning and load balancing. The system can be broken down into four main services, communicating via message passing.
+Implementing a service-oriented architecture (SOA) with distinct services, utilizing principles like data partitioning and load balancing. The system can be broken down into five main services, communicating via message passing.
 
 1. **The Warehouse Service (Inventory Management)** is the core storage and control service for each location.  
    **Data Model:** Stores products, available stock, and the warehouse capacity (volume).  
