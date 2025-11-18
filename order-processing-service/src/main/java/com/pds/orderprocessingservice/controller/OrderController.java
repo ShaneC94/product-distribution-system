@@ -43,6 +43,22 @@ public class OrderController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    // Additional endpoints for status updates (e.g., from Logistics)
-    // PATCH /api/orders/{id}/status/DELIVERED
+
+    /**
+     * Diagnostic endpoint to retrieve the list of candidate warehouse IDs
+     * from the Location Service for a given address, ranked by distance.
+     * Maps to GET /api/orders/candidates?address={address}
+     */
+    @GetMapping("/candidates")
+    public ResponseEntity<List<Long>> getWarehouseCandidates(@RequestParam String address) {
+        // Calls the public method in the OrderService
+        List<Long> candidateIds = orderService.findCandidateWarehouses(address);
+
+        if (candidateIds.isEmpty()) {
+            // Return 404 if the Location Service returned an empty list or failed
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(candidateIds, HttpStatus.OK); // Return 200 OK
+    }
+
 }

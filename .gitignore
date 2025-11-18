@@ -12,7 +12,7 @@ target/
 .env
 *.env
 **/*.env
-.env.*
+.env.Bryan
 *.key
 *.pem
 
