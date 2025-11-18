@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "customer_order")
 @Getter
@@ -29,6 +31,7 @@ public class Order {
 
     // One-to-Many Relationship: Links the Order to its line items. (KEEP THIS ONE)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING) // (KEEP THIS ONE)
