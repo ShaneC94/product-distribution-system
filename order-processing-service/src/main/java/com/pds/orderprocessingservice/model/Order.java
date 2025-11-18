@@ -1,6 +1,7 @@
 package com.pds.orderprocessingservice.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
@@ -11,7 +12,10 @@ import java.util.List;
 @Table(name = "customer_order")
 @Getter
 @Setter
+@Data // This single annotation handles all getters and setters.
 public class Order {
+
+    // Removed the three duplicate field declarations here.
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,19 +23,21 @@ public class Order {
 
     private Long customerId;
 
-    // The customer's delivery address
+    // The customer's delivery address (KEEP THIS ONE)
     private String deliveryAddress;
 
 
-    // One-to-Many Relationship: Links the Order to its line items.
-    // cascade = CascadeType.ALL ensures items are saved/deleted with the parent order.
+    // One-to-Many Relationship: Links the Order to its line items. (KEEP THIS ONE)
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // (KEEP THIS ONE)
     private OrderStatus status = OrderStatus.RECEIVED;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
 
+    // NOTE: You do not need @Getter, @Setter, and @Data together.
+    // @Data includes @Getter, @Setter, @RequiredArgsConstructor, @ToString, and @EqualsAndHashCode.
+    // You can safely remove @Getter and @Setter as @Data already provides them.
 }

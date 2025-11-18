@@ -1,6 +1,7 @@
 package com.pds.orderprocessingservice.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,9 @@ import lombok.Setter;
 @Table(name = "order_item")
 @Getter
 @Setter
+@Data
 public class OrderItem {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

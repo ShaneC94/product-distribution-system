@@ -1,5 +1,6 @@
 package com.pds.orderprocessingservice.service;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import lombok.Setter;
 @Getter // Provides getters for all fields
 @Setter // Provides setters for all fields (useful if Jackson needs them)
 @NoArgsConstructor // Required by Jackson for deserialization from JSON
+@Data
 public class StockReservationResponse {
 
     // Core success flag. Lombok creates boolean methods like isSuccess()

@@ -12,7 +12,7 @@ target/
 .env
 *.env
 **/*.env
-.env.Bryan
+order-processing-service/src/.env.Bryan
 *.key
 *.pem
 
