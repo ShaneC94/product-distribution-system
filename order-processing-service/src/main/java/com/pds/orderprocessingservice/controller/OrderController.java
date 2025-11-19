@@ -19,7 +19,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @GetMapping // Maps to GET /api/orders
+    @GetMapping // Maps to GET http://localhost:8082/api/orders
     public ResponseEntity<List<Order>> getAllOrders() {
 
         List<Order> orders = this.orderService.findAll();

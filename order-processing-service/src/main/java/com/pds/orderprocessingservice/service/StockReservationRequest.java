@@ -30,6 +30,5 @@ public class StockReservationRequest {
         return quantity;
     }
 
-    // Setters are typically not needed for request DTOs,
-    // but they can be added if needed for other deserialization purposes.
+
 }

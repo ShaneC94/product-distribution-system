@@ -69,8 +69,9 @@ public class OrderService {
 
     // Helper method to call the Warehouse Service for a single item
     private StockReservationResponse checkAndReserveStock(Long warehouseId, OrderItem item) {
-
-        String url = warehouseServiceUrl + "/reserve-item"; // New specific endpoint
+        //specific endpoint
+        //calls the http://localhost:8081/reserve-item
+        String url = warehouseServiceUrl + "/reserve-item";
 
         // 1. Construct the payload for the Warehouse Service
         StockReservationRequest payload = new StockReservationRequest(
@@ -104,9 +105,8 @@ public class OrderService {
         String url = locationServiceUrl + "/api/warehouses/ranked/async?address=" + address;
 
         try {
-            // Use generics to tell RestTemplate exactly what to expect.
-            // We expect a Map where the value is a List, which contains Maps.
-            // We'll use a raw Map here for simplicity, but acknowledge the unchecked cast.
+            // Expect a Map where the value is a List, which contains Maps.
+            // Use a raw Map here for simplicity
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
             // --- Response Parsing and Extraction ---
@@ -153,7 +153,7 @@ public class OrderService {
 
             for (Long warehouseId : candidateWarehouseIds) {
 
-                // 2. Call Warehouse Service to check stock and reserve
+                // 2. uses the internal method checkAndReserveStock to call warehouse, stores response
                 StockReservationResponse response = checkAndReserveStock(warehouseId, item);
 
                 if (response != null && response.isSuccess()) {

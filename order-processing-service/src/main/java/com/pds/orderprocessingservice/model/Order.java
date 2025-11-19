@@ -1,17 +1,22 @@
 package com.pds.orderprocessingservice.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 @Entity
 @Table(name = "customer_order")
-@Getter
-@Setter
+ // @Data includes @Getter, @Setter, @RequiredArgsConstructor, @ToString, and @EqualsAndHashCode.
+@Data
 public class Order {
+
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,8 +29,8 @@ public class Order {
 
 
     // One-to-Many Relationship: Links the Order to its line items.
-    // cascade = CascadeType.ALL ensures items are saved/deleted with the parent order.
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
@@ -34,4 +39,4 @@ public class Order {
     private LocalDateTime createdAt = LocalDateTime.now();
 
 
-}
+    }
