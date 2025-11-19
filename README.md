@@ -124,7 +124,7 @@ Example:
 
 ```
 CREATE DATABASE locationdb;
-CREATE DATABASE warehousedb;
+CREATE DATABASE pds_warehouse;
 CREATE DATABASE pds_order_db;
 CREATE DATABASE logisticsdb;
 CREATE DATABASE faultsdb;
