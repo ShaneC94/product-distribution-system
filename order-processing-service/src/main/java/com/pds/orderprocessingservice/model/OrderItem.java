@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Table(name = "order_item")
-@Getter
-@Setter
 @Data
 public class OrderItem {
 

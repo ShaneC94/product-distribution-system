@@ -12,12 +12,11 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "customer_order")
-@Getter
-@Setter
-@Data // This single annotation handles all getters and setters.
+ // @Data includes @Getter, @Setter, @RequiredArgsConstructor, @ToString, and @EqualsAndHashCode.
+@Data
 public class Order {
 
-    // Removed the three duplicate field declarations here.
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,22 +24,19 @@ public class Order {
 
     private Long customerId;
 
-    // The customer's delivery address (KEEP THIS ONE)
+    // The customer's delivery address
     private String deliveryAddress;
 
 
-    // One-to-Many Relationship: Links the Order to its line items. (KEEP THIS ONE)
+    // One-to-Many Relationship: Links the Order to its line items.
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
-    @Enumerated(EnumType.STRING) // (KEEP THIS ONE)
+    @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.RECEIVED;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
 
-    // NOTE: You do not need @Getter, @Setter, and @Data together.
-    // @Data includes @Getter, @Setter, @RequiredArgsConstructor, @ToString, and @EqualsAndHashCode.
-    // You can safely remove @Getter and @Setter as @Data already provides them.
-}
+    }
