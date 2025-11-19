@@ -37,24 +37,24 @@ VALUES (
 -- Order 1 Items (Status: RECEIVED - Items should be PENDING)
 -- Item 1 (Order 1): 10 Widgets
 INSERT INTO order_item (order_id, product_code, quantity, fulfilled_by_warehouse_id, item_status)
-VALUES (1, 'WIDGET_A', 10, NULL, 'PENDING');
+VALUES (1, 1001, 10, NULL, 'PENDING');
 
 -- Item 2 (Order 1): 5 Gadgets
 INSERT INTO order_item (order_id, product_code, quantity, fulfilled_by_warehouse_id, item_status)
-VALUES (1, 'GADGET_B', 5, NULL, 'PENDING');
+VALUES (1, 1002, 5, NULL, 'PENDING');
 
 
 -- Order 2 Items (Status: STOCK_RESERVED - Items should be RESERVED)
 -- Item 3 (Order 2): 20 Blue Shirts, reserved by Warehouse 10
 INSERT INTO order_item (order_id, product_code, quantity, fulfilled_by_warehouse_id, item_status)
-VALUES (2, 'SHIRT_BLUE', 20, 10, 'RESERVED');
+VALUES (2, 1003, 20, 10, 'RESERVED');
 
 -- Item 4 (Order 2): 5 Green Hats, reserved by Warehouse 12 (Example of Split Shipment)
 INSERT INTO order_item (order_id, product_code, quantity, fulfilled_by_warehouse_id, item_status)
-VALUES (2, 'HAT_GREEN', 5, 12, 'RESERVED');
+VALUES (2, 1004, 5, 12, 'RESERVED');
 
 
 -- Order 3 Items (Status: DELIVERED - Items should be RESERVED/Completed)
 -- Item 5 (Order 3): 1 Laptop, reserved by Warehouse 10
 INSERT INTO order_item (order_id, product_code, quantity, fulfilled_by_warehouse_id, item_status)
-VALUES (3, 'LAPTOP_XYZ', 1, 10, 'RESERVED');
+VALUES (3, 1004, 1, 10, 'RESERVED');

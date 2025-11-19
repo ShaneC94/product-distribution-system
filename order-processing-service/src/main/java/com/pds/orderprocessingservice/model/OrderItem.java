@@ -16,7 +16,7 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String productCode;
+    private Long productCode;
     private int quantity;
 
     // Which warehouse reserved this specific item (Split Shipment Tracking)

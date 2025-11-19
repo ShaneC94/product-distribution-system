@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS order_item (
     -- Foreign Key linking back to the parent order
     order_id BIGINT NOT NULL,
 
-    product_code VARCHAR(100) NOT NULL,
+    product_code BIGINT NOT NULL,
     quantity INT NOT NULL,
 
     -- Tracks which warehouse fulfilled this specific item (Split Shipment)

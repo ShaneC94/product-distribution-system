@@ -4,13 +4,13 @@ package com.pds.orderprocessingservice.service;
 public class StockReservationRequest {
 
     private Long warehouseId;
-    private String productCode;
+    private Long productCode;
     private int quantity;
 
     /**
      * All-args constructor to create the payload before sending via RestTemplate.
      */
-    public StockReservationRequest(Long warehouseId, String productCode, int quantity) {
+    public StockReservationRequest(Long warehouseId, Long productCode, int quantity) {
         this.warehouseId = warehouseId;
         this.productCode = productCode;
         this.quantity = quantity;
@@ -22,7 +22,7 @@ public class StockReservationRequest {
         return warehouseId;
     }
 
-    public String getProductCode() {
+    public Long getProductCode() {
         return productCode;
     }
 
