@@ -185,4 +185,36 @@ public class LocationService {
     public String reverseGeocode(double lat, double lon) {
         return googleMapsService.reverseGeocode(lat, lon);
     }
+
+
+    // -------------------------------------------------------------
+    // LOGISTICS ROUTE LOOKUP: Compute distance, duration, and dynamic zone
+    // -------------------------------------------------------------
+    public WarehouseZoneInfo getWarehouseInfoWithRoute(Long warehouseId, String customerAddress) {
+
+        Warehouse wh = warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new RuntimeException("Warehouse not found"));
+
+        double[] customerCoords = googleMapsService.geocodeAddress(customerAddress);
+
+        JSONObject routeJson = googleMapsService.computeRoute(
+                wh.getLatitude(), wh.getLongitude(),
+                customerCoords[0], customerCoords[1]
+        );
+
+        WarehouseDistance dist = buildWarehouseDistance(customerCoords, wh, routeJson);
+
+        String zone = classifyZone(dist.getDistanceKm());
+
+        return new WarehouseZoneInfo(
+                dist.getId(),
+                dist.getName(),
+                dist.getAddress(),
+                dist.getDistanceKm(),
+                dist.getDurationSeconds(),
+                dist.getDurationText(),
+                zone
+        );
+    }
+
 }
