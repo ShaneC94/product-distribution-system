@@ -52,9 +52,7 @@ public class LocationController {
     // -------------------------------------------------------------
     @GetMapping("/clearCache")
     public String clearCaches() {
-        cacheManager.getCacheNames().forEach(name -> {
-            Objects.requireNonNull(cacheManager.getCache(name)).clear();
-        });
+        cacheManager.getCacheNames().forEach(name -> Objects.requireNonNull(cacheManager.getCache(name)).clear());
         return "All caches cleared.";
     }
 
@@ -78,4 +76,16 @@ public class LocationController {
         }
         return entries;
     }
+
+    // -------------------------------------------------------------
+    // REVERSE GEOCODING: Convert lat/lon back into an address
+    // -------------------------------------------------------------
+    @GetMapping("/reverseGeocode")
+    public String reverseGeocode(@RequestParam double lat, @RequestParam double lon) {
+        return locationService.reverseGeocode(lat, lon);
+    }
+
+
+
+
 }

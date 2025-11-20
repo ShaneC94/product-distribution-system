@@ -127,4 +127,18 @@ public class WarehouseController {
 
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
+
+    // -------------------------------------------------------------
+    // ROUTE LOOKUP: Compute distance, duration, and dynamic zone
+    // -------------------------------------------------------------
+    @GetMapping("/{id}/route")
+    public ResponseEntity<WarehouseZoneInfo> getWarehouseRouteToCustomer(
+            @PathVariable Long id,
+            @RequestParam String customerAddress
+    ) throws JSONException {
+
+        WarehouseZoneInfo info = locationService.getWarehouseInfoWithRoute(id, customerAddress);
+        return ResponseEntity.ok(info);
+    }
+
 }
