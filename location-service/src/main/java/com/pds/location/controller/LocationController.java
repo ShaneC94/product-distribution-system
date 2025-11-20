@@ -9,6 +9,22 @@ import org.springframework.cache.CacheManager;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
+/**
+ * REST API providing geolocation utilities and diagnostic tools.
+ * Endpoints Include:
+ *   - Nearest warehouse by lat/lon or address
+ *   - Reverse geocoding (lat/lon → address)
+ *   - Cache inspection (/location/debug)
+ *   - Clear all caches (/location/clearCache)
+ * Used For:
+ *   - Internal testing and debugging
+ *   - Verifying geocoding and routing behavior
+ *   - Inspecting cache contents at runtime
+ * Integration:
+ *   - LocationService (warehouse logic)
+ *   - CacheManager (Spring caching)
+ */
+
 @RestController
 @RequestMapping("/location")
 public class LocationController {

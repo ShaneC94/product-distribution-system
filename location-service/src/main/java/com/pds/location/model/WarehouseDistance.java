@@ -1,5 +1,17 @@
 package com.pds.location.model;
 
+/**
+ * Represents computed travel distance & duration between a customer and a warehouse.
+ * Contains:
+ *   - Warehouse identity (id, name, address)
+ *   - Distance in kilometers
+ *   - Duration in seconds
+ *   - Readable duration text ("12 min")
+ * Used Internally By:
+ *   - LocationService for ranking and zone classification
+ *   - Returned in /api/warehouses/ranked/async
+ */
+
 public class WarehouseDistance {
     private Long id;
     private String name;
