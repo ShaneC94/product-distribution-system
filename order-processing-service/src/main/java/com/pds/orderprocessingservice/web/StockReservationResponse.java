@@ -1,4 +1,4 @@
-package com.pds.orderprocessingservice.service;
+package com.pds.orderprocessingservice.web;
 
 import lombok.Data;
 import lombok.Getter;
