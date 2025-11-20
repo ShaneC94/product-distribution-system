@@ -67,27 +67,7 @@ public class OrderService {
         return orderRepository.save(savedOrder);
     }
 
-    // Helper method to call the Warehouse Service for a single item
-    private StockReservationResponse checkAndReserveStock(Long warehouseId, OrderItem item) {
-        //specific endpoint
-        //calls the http://localhost:8081/reserve-item
-        String url = warehouseServiceUrl + "/reserve-item";
 
-        // 1. Construct the payload for the Warehouse Service
-        StockReservationRequest payload = new StockReservationRequest(
-                warehouseId,
-                item.getProductCode(),
-                item.getQuantity()
-        );
-
-        try {
-            // 2. POST the request and expect a structured response (DTO)
-            return restTemplate.postForObject(url, payload, StockReservationResponse.class);
-        } catch (Exception e) {
-            System.err.println("Warehouse " + warehouseId + " call failed for item " + item.getProductCode() + ": " + e.getMessage());
-            return new StockReservationResponse(false); // Return failure DTO on exception
-        }
-    }
 
     public Optional<Order> getOrderById(Long id) {
         return orderRepository.findById(id);
@@ -124,8 +104,8 @@ public class OrderService {
 
         } catch (Exception e) {
             System.err.println("Error calling Location Service: " + e.getMessage());
-            // Placeholder for local testing - ensure you remove this for production readiness
-            return List.of(101L, 102L);
+            // Placeholder for local testing
+            return List.of();
         }
     }
 
@@ -175,6 +155,28 @@ public class OrderService {
         }
         // All items were successfully reserved across the candidate warehouses
         return true;
+    }
+
+    // Helper method to call the Warehouse Service for a single item
+    private StockReservationResponse checkAndReserveStock(Long warehouseId, OrderItem item) {
+        //specific endpoint
+        //calls the http://localhost:8081/reserve-item
+        String url = warehouseServiceUrl + "/reserve-item";
+
+        // 1. Construct the payload for the Warehouse Service
+        StockReservationRequest payload = new StockReservationRequest(
+                warehouseId,
+                item.getProductCode(),
+                item.getQuantity()
+        );
+
+        try {
+            // 2. POST the request and expect a structured response (DTO)
+            return restTemplate.postForObject(url, payload, StockReservationResponse.class);
+        } catch (Exception e) {
+            System.err.println("Warehouse " + warehouseId + " call failed for item " + item.getProductCode() + ": " + e.getMessage());
+            return new StockReservationResponse(false); // Return failure DTO on exception
+        }
     }
 }
 

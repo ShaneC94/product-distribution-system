@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -19,7 +19,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @GetMapping // Maps to GET http://localhost:8082/api/orders
+    @GetMapping // Maps to GET http://localhost:8082/orders
     public ResponseEntity<List<Order>> getAllOrders() {
 
         List<Order> orders = this.orderService.findAll();
@@ -29,7 +29,7 @@ public class OrderController {
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping //POST http://localhost:8082/orders
     public ResponseEntity<Order> createOrder(@Valid @RequestBody Order order) {
         // The service handles the entire workflow: assignment, stock reservation, and state update
         Order processedOrder = orderService.processNewOrder(order);

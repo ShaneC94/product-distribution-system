@@ -1,39 +1,45 @@
 package com.pds.warehouseservice.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.Instant;
 
+@Getter
 @Entity
 @Table(name = "stock_reservations")
 public class StockReservation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     private Long warehouseId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @Setter
+    @Column(name = "product_code", nullable = false)
+    private Long productCode;
 
+    @Setter
     private long quantity;
 
+    @Setter
     private Instant createdAt = Instant.now();
 
+    // 1. Default (no-argument) constructor for Hibernate
     public StockReservation() {}
-    public StockReservation(Long warehouseId, Product product, long quantity) {
+
+
+    // 2. Parameterized constructor for service layer instantiation
+    public StockReservation(Long warehouseId, Long productCode, long quantity) {
         this.warehouseId = warehouseId;
-        this.product = product;
+        this.productCode = productCode;
         this.quantity = quantity;
     }
 
-    public Long getId() { return id; }
-    public Long getWarehouseId() { return warehouseId; }
-    public void setWarehouseId(Long warehouseId) { this.warehouseId = warehouseId; }
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
-    public long getQuantity() { return quantity; }
-    public void setQuantity(long quantity) { this.quantity = quantity; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public Long getId() {
+        return id;
+    }
 }

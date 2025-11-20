@@ -17,14 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventoryService {
 
     private final InventoryRepository inventoryRepository;
-    private final ProductRepository productRepository;
     private final StockReservationRepository reservationRepository;
 
     public InventoryService(InventoryRepository inventoryRepository,
-                            ProductRepository productRepository,
                             StockReservationRepository reservationRepository) {
         this.inventoryRepository = inventoryRepository;
-        this.productRepository = productRepository;
+
         this.reservationRepository = reservationRepository;
     }
 
@@ -38,15 +36,12 @@ public class InventoryService {
             return new StockReservationResponse(false);
         }
 
-        // 1) find product
-        Product product = productRepository.findByProductCode(req.getProductCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + req.getProductCode()));
 
-        // 2) lock inventory row
+        // 1) lock inventory row
         Inventory inv = inventoryRepository.findByWarehouseAndProductForUpdate(req.getWarehouseId(), req.getProductCode())
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for warehouse " + req.getWarehouseId() + " product " + req.getProductCode()));
 
-        // 3) check availability
+        // 2) check availability
         if (inv.getAvailableQuantity() < req.getQuantity()) {
             throw new InsufficientStockException("Not enough stock. Available=" + inv.getAvailableQuantity() + " requested=" + req.getQuantity());
         }
@@ -58,7 +53,7 @@ public class InventoryService {
         inventoryRepository.save(inv);
 
         // 5) create reservation record
-        StockReservation reservation = new StockReservation(req.getWarehouseId(), product, req.getQuantity());
+        StockReservation reservation = new StockReservation(req.getWarehouseId(), req.getProductCode(), req.getQuantity());
         StockReservation saved = reservationRepository.save(reservation);
 
         return new StockReservationResponse(true, saved.getId());

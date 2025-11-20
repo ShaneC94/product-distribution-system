@@ -1,8 +1,12 @@
 package com.pds.warehouseservice.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 
+@Getter
 @Entity
 @Table(name = "products")
 public class Product {
@@ -10,22 +14,26 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(nullable = false, unique = true)
-    private String productCode; // corresponds to productCode used by OrderProcessing
+    private Long productCode; // corresponds to productCode used by OrderProcessing
 
+    @Setter
     private String name;
 
-    public Product() {}
-    public Product(String productCode, String name) {
+
+    /**
+     * Required by Hibernate for entity creation and proxy generation.
+     */
+    public Product() {
+        // Default constructor
+    }
+
+
+    public Product(Long productCode, String name) {
         this.productCode = productCode;
         this.name = name;
     }
-
-    public Long getId() { return id; }
-    public String getProductCode() { return productCode; }
-    public void setProductCode(String productCode) { this.productCode = productCode; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
 
     @Override
     public boolean equals(Object o) {

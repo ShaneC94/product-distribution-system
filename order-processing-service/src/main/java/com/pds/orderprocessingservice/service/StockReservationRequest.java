@@ -1,11 +1,14 @@
 package com.pds.orderprocessingservice.service;
 
+import lombok.Getter;
+
 // DTO used for the POST request body
+@Getter
 public class StockReservationRequest {
 
-    private Long warehouseId;
-    private Long productCode;
-    private int quantity;
+    private final Long warehouseId;
+    private final Long productCode;
+    private final int quantity;
 
     /**
      * All-args constructor to create the payload before sending via RestTemplate.
@@ -16,19 +19,7 @@ public class StockReservationRequest {
         this.quantity = quantity;
     }
 
-    // --- Getters (Required by Spring's Jackson for serialization into JSON) ---
 
-    public Long getWarehouseId() {
-        return warehouseId;
-    }
-
-    public Long getProductCode() {
-        return productCode;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
 
 
 }
