@@ -2,6 +2,17 @@ package com.pds.location.model;
 
 import jakarta.persistence.*;
 
+/**
+ * JPA Entity representing a physical warehouse in the database.
+ * Stores:
+ *   - Name and address (unique by name)
+ *   - Latitude & Longitude coordinates
+ * Used By:
+ *   - LocationService (distance calculation, ranking)
+ *   - WarehouseController (CRUD operations)
+ *   - LogisticsService (route lookup via LocationService)
+ */
+
 @Entity
 @Table(
         name = "warehouses",

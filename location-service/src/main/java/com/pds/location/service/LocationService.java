@@ -13,6 +13,26 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+
+/**
+ * Core business logic for warehouse geocoding, ranking, routing, and zone classification.
+ * Responsibilities:
+ *   - Compute driving distance & duration using GoogleRoutes API (with async support)
+ *   - Fallback to Haversine for fast approximation
+ *   - Rank warehouses by distance (async route computation)
+ *   - Classify warehouses into delivery zones (A/B/C)
+ *   - Provide nearest-warehouse lookups (lat/lon or address)
+ *   - Provide dynamic zone + travel info for LogisticsService
+ * Integration Points:
+ *   - GoogleMapsService (geocoding + routing)
+ *   - WarehouseRepository (database access)
+ *   - WarehouseController and LocationController (REST endpoints)
+ * Used By:
+ *   - WarehouseController (/api/warehouses)
+ *   - LocationController (/location)
+ *   - LogisticsService via route lookup endpoint
+ */
+
 @Service
 public class LocationService {
 

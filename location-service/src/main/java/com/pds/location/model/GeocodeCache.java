@@ -3,6 +3,16 @@ package com.pds.location.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * JPA Entity for storing cached geocode results (address → lat/lon).
+ * Features:
+ *   - Persistent cache to reduce Google API calls
+ *   - Tracks created_at and last_accessed timestamps
+ * Used By:
+ *   - GoogleMapsService.geocodeAddress()
+ *   - /location/debug endpoint (cache inspection)
+ */
+
 @Entity
 @Table(name = "geocode_cache")
 public class GeocodeCache {

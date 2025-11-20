@@ -13,6 +13,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * REST API for managing warehouses and computing routes/zones.
+ * Endpoints Include:
+ *   - CRUD operations for warehouses
+ *   - Rank warehouses by travel distance (async)
+ *   - Classify warehouses into zones (A/B/C)
+ *   - Compute route details to a customer (distance + duration + zone)
+ *   - Nearest warehouse lookup
+ * Integration:
+ *   - GoogleMapsService for geocoding and routing
+ *   - LocationService for ranking and classification logic
+ *   - WarehouseRepository for DB operations
+ */
+
 @RestController
 @RequestMapping("/api/warehouses")
 @CrossOrigin(origins = "*")
