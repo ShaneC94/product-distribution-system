@@ -5,13 +5,16 @@ import com.pds.orderprocessingservice.model.Order;
 import com.pds.orderprocessingservice.model.OrderItem;
 import com.pds.orderprocessingservice.model.OrderStatus;
 import com.pds.orderprocessingservice.repository.OrderRepository;
+import com.pds.orderprocessingservice.web.ShipmentItem;
+import com.pds.orderprocessingservice.web.ShipmentRequest;
+import com.pds.orderprocessingservice.web.StockReservationRequest;
+import com.pds.orderprocessingservice.web.StockReservationResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +29,9 @@ public class OrderService {
 
     @Value("${service.warehouse.url}")
     private String warehouseServiceUrl;
+
+    @Value("${service.logistics.url}")
+    private String logisticsServiceUrl;
 
     public OrderService(OrderRepository orderRepository, RestTemplate restTemplate) {
         this.orderRepository = orderRepository;
@@ -57,10 +63,13 @@ public class OrderService {
             if (allItemsReserved) {
                 // Overall status reflects successful reservation
                 savedOrder.setStatus(OrderStatus.STOCK_RESERVED);
-                // Note: The savedOrder now implicitly knows the assigned warehouses via items list
+                // The savedOrder now implicitly knows the assigned warehouses via items list
+
+                scheduleShipment(savedOrder);
+                savedOrder.setStatus(OrderStatus.SCHEDULED_FOR_DELIVERY);
             } else {
                 savedOrder.setStatus(OrderStatus.FAILED);
-                // Note: The items list will show which items failed (ItemStatus.NOT_AVAILABLE)
+                //The items list will show which items failed (ItemStatus.NOT_AVAILABLE)
             }
         }
 
@@ -178,5 +187,53 @@ public class OrderService {
             return new StockReservationResponse(false); // Return failure DTO on exception
         }
     }
+
+
+    /**
+     * Prepares data and calls the Logistics Service to schedule the shipment.
+     * Only sends the warehouse ID, relying on Logistics to query Location for the address.
+     */
+    private void scheduleShipment(Order order) {
+
+        // Collect unique warehouse IDs and prepare ShipmentItems
+        List<ShipmentItem> shipmentItems = order.getItems().stream()
+                .filter(item -> item.getItemStatus() == ItemStatus.RESERVED)
+                .map(item -> {
+                    // 1. Create ShipmentItem DTO with only the ID
+                    return new ShipmentItem(
+                            item.getProductCode(),
+                            item.getQuantity(),
+                            item.getFulfilledByWarehouseId() // Sends ID only
+
+                    );
+                })
+                .toList();
+
+        if (shipmentItems.isEmpty()) {
+            System.err.println("Error: Cannot schedule shipment for empty or failed order.");
+            return;
+        }
+
+        // 2. Construct Final Payload
+        ShipmentRequest payload = new ShipmentRequest(
+                order.getId(),
+                order.getDeliveryAddress(),
+                shipmentItems
+        );
+
+        // 3. Call Logistics Service
+        String url = logisticsServiceUrl + "/assignment";
+        try {
+            restTemplate.postForObject(url, payload, String.class);
+            System.out.println("Shipment successfully scheduled for Order ID " + order.getId());
+
+        } catch (Exception e) {
+            System.err.println("Error calling Logistics Service: " + e.getMessage());
+        }
+    }
+
+    // --- REMOVED METHOD ---
+    // private String getWarehouseAddress(Long warehouseId) { ... } // This is now gone!
 }
+
 
