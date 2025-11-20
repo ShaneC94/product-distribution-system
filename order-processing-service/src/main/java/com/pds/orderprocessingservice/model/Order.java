@@ -1,43 +1,42 @@
 package com.pds.orderprocessingservice.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "customer_order")
+ // @Data includes @Getter, @Setter, @RequiredArgsConstructor, @ToString, and @EqualsAndHashCode.
+@Data
 public class Order {
+
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long customerId;
+
+    // The customer's delivery address
     private String deliveryAddress;
 
-    // The key piece of data for assignment
-    private Long assignedWarehouseId;
+
+    // One-to-Many Relationship: Links the Order to its line items.
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<OrderItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.RECEIVED;
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // NOTE: OrderItem details are omitted for brevity,
-    // but should be mapped here (e.g., using a @OneToMany list).
 
-    // Getters and Setters (omitted for brevity)
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    // ... other getters/setters
-
-    public String getDeliveryAddress() { return deliveryAddress; }
-    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
-
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
-
-    public Long getAssignedWarehouseId() { return assignedWarehouseId; }
-    public void setAssignedWarehouseId(Long assignedWarehouseId) { this.assignedWarehouseId = assignedWarehouseId; }
-
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
-}
+    }

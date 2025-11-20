@@ -1,6 +1,8 @@
 package com.pds.orderprocessingservice.service;
 
+import com.pds.orderprocessingservice.model.ItemStatus;
 import com.pds.orderprocessingservice.model.Order;
+import com.pds.orderprocessingservice.model.OrderItem;
 import com.pds.orderprocessingservice.model.OrderStatus;
 import com.pds.orderprocessingservice.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,37 +40,34 @@ public class OrderService {
      */
     @Transactional
     public Order processNewOrder(Order newOrder) {
-        // 1. Save Initial State
+        // 1. Save Initial State & Prepare Items (Must ensure items have 'order' set)
         newOrder.setStatus(OrderStatus.RECEIVED);
-        Order savedOrder = orderRepository.save(newOrder);
+        newOrder.getItems().forEach(item -> item.setOrder(newOrder)); // Link children to parent
+        Order savedOrder = orderRepository.save(newOrder); // Saves items due to CascadeType.ALL
 
-        // 2. Coordinate: Find Potential Warehouses (Placeholder for DTO)
+        // 2. Coordinate: Find Potential Warehouses (Ranked by Distance - Priority #1)
         List<Long> candidateWarehouses = findCandidateWarehouses(savedOrder.getDeliveryAddress());
 
         if (candidateWarehouses.isEmpty()) {
             savedOrder.setStatus(OrderStatus.FAILED);
-            return orderRepository.save(savedOrder);
-        }
-
-        // 3. Coordinate: Load Balancing and Assignment
-        Long assignedWarehouseId = selectBestWarehouse(candidateWarehouses);
-        savedOrder.setAssignedWarehouseId(assignedWarehouseId);
-        savedOrder.setStatus(OrderStatus.ASSIGNED);
-        savedOrder = orderRepository.save(savedOrder);
-
-        // 4. Coordinate: Reserve Stock (Simplified synchronous call)
-        boolean stockReserved = reserveStock(savedOrder.getId(), assignedWarehouseId);
-
-        if (stockReserved) {
-            savedOrder.setStatus(OrderStatus.STOCK_RESERVED);
-            // 5. COORDINATE: Publish to Logistics Service for Scheduling (TODO)
         } else {
-            savedOrder.setStatus(OrderStatus.FAILED);
-            // In a real system, you would handle re-assignment or customer notification
+            // 3. Fulfill Items (Checks Stock Availability - Priority #2)
+            boolean allItemsReserved = fulfillOrder(savedOrder.getItems(), candidateWarehouses);
+
+            if (allItemsReserved) {
+                // Overall status reflects successful reservation
+                savedOrder.setStatus(OrderStatus.STOCK_RESERVED);
+                // Note: The savedOrder now implicitly knows the assigned warehouses via items list
+            } else {
+                savedOrder.setStatus(OrderStatus.FAILED);
+                // Note: The items list will show which items failed (ItemStatus.NOT_AVAILABLE)
+            }
         }
 
         return orderRepository.save(savedOrder);
     }
+
+
 
     public Optional<Order> getOrderById(Long id) {
         return orderRepository.findById(id);
@@ -80,15 +79,14 @@ public class OrderService {
      * Calls Location Service to get a list of nearby warehouses.
      * Simulates an HTTP call.
      */
-    private List<Long> findCandidateWarehouses(String address) {
+    public List<Long> findCandidateWarehouses(String address) {
 
         // 1. makes a url for the get request
         String url = locationServiceUrl + "/api/warehouses/ranked/async?address=" + address;
 
         try {
-            // Use generics to tell RestTemplate exactly what to expect.
-            // We expect a Map where the value is a List, which contains Maps.
-            // We'll use a raw Map here for simplicity, but acknowledge the unchecked cast.
+            // Expect a Map where the value is a List, which contains Maps.
+            // Use a raw Map here for simplicity
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
 
             // --- Response Parsing and Extraction ---
@@ -106,44 +104,79 @@ public class OrderService {
 
         } catch (Exception e) {
             System.err.println("Error calling Location Service: " + e.getMessage());
-            // Placeholder for local testing - ensure you remove this for production readiness
-            return List.of(101L, 102L);
+            // Placeholder for local testing
+            return List.of();
         }
     }
 
-    /**
-     * Implements the Load Balancing strategy (e.g., Least Capacity Used).
-     * Simulates fetching load data and choosing the best one.
-     */
-    private Long selectBestWarehouse(List<Long> candidateIds) {
-        // Placeholder for a real Load Balancing implementation.
-        // In reality, this would involve a second call to a Warehouse Status API
-        // to fetch metrics (e.g., remaining capacity or current load).
-        // For now, we'll just pick the first one.
-        System.out.println("Applying load balancing among: " + candidateIds);
-        return candidateIds.get(0);
-    }
 
     /**
      * Calls Warehouse Service to reserve stock atomically.
      * Simulates an HTTP call.
      */
-    private boolean reserveStock(Long orderId, Long warehouseId) {
-        // Example: POST http://localhost:8082/api/warehouse/reserve-stock
-        String url = warehouseServiceUrl + "/reserve-stock";
-        // Order details (products/quantities) would be included in the request body (DTO).
-        try {
-            restTemplate.postForLocation(url, new Object()); // Placeholder request
-            System.out.println("Stock reservation requested for Order " + orderId + " at Warehouse " + warehouseId);
-            return true; // Assume success if no exception
-        } catch (Exception e) {
-            System.err.println("Stock reservation failed: " + e.getMessage());
-            return false;
-        }
-    }
 
     public List<Order> findAll() {
 
         return orderRepository.findAll();
     }
+
+    /**
+     * Attempts to fulfill all items by checking ranked warehouses in order.
+     * @return True if all items were successfully reserved, false otherwise.
+     */
+    private boolean fulfillOrder(List<OrderItem> items, List<Long> candidateWarehouseIds) {
+
+        for (OrderItem item : items) {
+
+            // 1. Check warehouses one by one for the current item
+            boolean itemReserved = false;
+
+            for (Long warehouseId : candidateWarehouseIds) {
+
+                // 2. uses the internal method checkAndReserveStock to call warehouse, stores response
+                StockReservationResponse response = checkAndReserveStock(warehouseId, item);
+
+                if (response != null && response.isSuccess()) {
+                    // SUCCESS: Stock found and reserved at this warehouse
+                    item.setFulfilledByWarehouseId(warehouseId);
+                    item.setItemStatus(ItemStatus.RESERVED);
+                    itemReserved = true;
+                    break; // Move to the next item in the order
+                }
+            }
+
+            // 3. If the item couldn't be reserved at ANY candidate warehouse
+            if (!itemReserved) {
+                item.setItemStatus(ItemStatus.NOT_AVAILABLE);
+                // In a real system, this would trigger backorder or customer notification
+                // We return false, causing the entire order to fail for simplicity.
+                return false;
+            }
+        }
+        // All items were successfully reserved across the candidate warehouses
+        return true;
+    }
+
+    // Helper method to call the Warehouse Service for a single item
+    private StockReservationResponse checkAndReserveStock(Long warehouseId, OrderItem item) {
+        //specific endpoint
+        //calls the http://localhost:8081/reserve-item
+        String url = warehouseServiceUrl + "/reserve-item";
+
+        // 1. Construct the payload for the Warehouse Service
+        StockReservationRequest payload = new StockReservationRequest(
+                warehouseId,
+                item.getProductCode(),
+                item.getQuantity()
+        );
+
+        try {
+            // 2. POST the request and expect a structured response (DTO)
+            return restTemplate.postForObject(url, payload, StockReservationResponse.class);
+        } catch (Exception e) {
+            System.err.println("Warehouse " + warehouseId + " call failed for item " + item.getProductCode() + ": " + e.getMessage());
+            return new StockReservationResponse(false); // Return failure DTO on exception
+        }
+    }
 }
+
