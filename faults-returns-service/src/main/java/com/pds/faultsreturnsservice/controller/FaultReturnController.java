@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/faults")
+@RequestMapping("/api/faults-returns")
 public class FaultReturnController {
-
     private final FaultReturnService service;
 
     public FaultReturnController(FaultReturnService service) {
@@ -18,37 +17,17 @@ public class FaultReturnController {
     }
 
     @PostMapping
-    public FaultReturn create(@RequestBody FaultReturn req) {
-        return service.create(req);
+    public FaultReturn reportFault(@RequestBody FaultReturn faultReturn) {
+        return service.reportFault(faultReturn);
     }
 
-    @GetMapping("/{id}")
-    public FaultReturn get(@PathVariable Long id) {
-        return service.get(id);
+    @GetMapping
+    public List<FaultReturn> getAll() {
+        return service.getAll();
     }
 
-    @GetMapping("/status/{status}")
-    public List<FaultReturn> getByStatus(@PathVariable FaultReturnStatus status) {
-        return service.listByStatus(status);
-    }
-
-    @GetMapping("/order/{orderId}")
-    public List<FaultReturn> getByOrderId(@PathVariable Long orderId) {
-        return service.listByOrderId(orderId);
-    }
-
-    @PostMapping("/{id}/inspect")
-    public FaultReturn inspect(@PathVariable Long id) {
-        return service.markInspected(id);
-    }
-
-    @PostMapping("/{id}/restock")
-    public FaultReturn restock(@PathVariable Long id) {
-        return service.markRestocked(id);
-    }
-
-    @PostMapping("/{id}/discard")
-    public FaultReturn discard(@PathVariable Long id) {
-        return service.markDiscarded(id);
+    @PatchMapping("/{id}/status")
+    public FaultReturn updateStatus(@PathVariable Long id, @RequestParam FaultReturnStatus status) {
+        return service.updateStatus(id, status);
     }
 }
