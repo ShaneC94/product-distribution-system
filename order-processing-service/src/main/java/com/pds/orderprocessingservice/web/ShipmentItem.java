@@ -9,10 +9,10 @@ public class ShipmentItem {
     private Long productId;
     private int quantity;
     private Long warehouseId;
-    // Removed: private String warehouseAddress;
 
-    // Constructors, Getters, Setters...
-    public ShipmentItem(Long productId, int quantity, Long warehouseId) { // Constructor updated
+
+    // Constructors
+    public ShipmentItem(Long productId, int quantity, Long warehouseId) {
         this.productId = productId;
         this.quantity = quantity;
         this.warehouseId = warehouseId;
