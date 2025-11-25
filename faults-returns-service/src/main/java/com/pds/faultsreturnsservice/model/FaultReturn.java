@@ -5,13 +5,11 @@ import java.time.LocalDateTime;
 
 @Entity
 public class FaultReturn {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Long orderId;
-
     private String reason;
 
     @Enumerated(EnumType.STRING)
@@ -19,7 +17,7 @@ public class FaultReturn {
 
     private LocalDateTime reportedAt = LocalDateTime.now();
 
-    // Getters + Setters
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
