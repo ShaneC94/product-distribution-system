@@ -232,8 +232,7 @@ public class OrderService {
         }
     }
 
-    // --- REMOVED METHOD ---
-    // private String getWarehouseAddress(Long warehouseId) { ... } // This is now gone!
+
 }
 
 
